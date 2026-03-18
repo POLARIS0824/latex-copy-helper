@@ -1,2 +1,2 @@
-会与 gemini voyager 插件重复
-暂未修复
+已经在 gemini voyager 的 fork 分支中实现该功能
+可移步 https://github.com/POLARIS0824/gemini-voyager
