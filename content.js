@@ -12,6 +12,10 @@
 (function () {
   'use strict';
 
+  // 冷却期机制：防止短时间内重复转换
+  let lastConversionTime = 0;
+  const CONVERSION_COOLDOWN = 1000; // 1秒内不重复转换
+
   function convertLatexDelimiters(text) {
     if (!text || !text.includes('$')) return text;
 
@@ -31,7 +35,7 @@
 
     // 恢复块级公式
     blocks.forEach((orig, i) => {
-      processed = processed.replace(`__BLOCK_${i}__`, orig);
+      processed = processed.replace(new RegExp(`__BLOCK_${i}__`, 'g'), orig);
     });
 
     return processed;
@@ -79,6 +83,12 @@
    * 尝试读取剪贴板并转换 LaTeX 格式
    */
   async function tryConvertClipboard() {
+    // 检查冷却期，防止重复转换
+    const now = Date.now();
+    if (now - lastConversionTime < CONVERSION_COOLDOWN) {
+      return;
+    }
+
     try {
       const text = await navigator.clipboard.readText();
       if (!text || !text.includes('$')) return;
@@ -86,6 +96,7 @@
       const converted = convertLatexDelimiters(text);
       if (converted !== text) {
         await navigator.clipboard.writeText(converted);
+        lastConversionTime = Date.now(); // 记录转换时间
         showToast('✅ LaTeX 公式已转换为 Notion 格式');
         console.log('[LaTeX Copy Helper] 已转换剪贴板内容');
       }
